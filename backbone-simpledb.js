@@ -1,8 +1,25 @@
-var simpledb = require('node-simpledb');
+var _ = require('underscore')._;
+    querystring = require('querystring'),
+    simpledb = require('simpledb'),
+    dbs = {};
 
-module.exports = function(settings) {
-    var sdb = new simpledb.SimpleDB({keyid: settings.aws_key, secret: settings.aws_secret});
-    sdb.createDomain(settings.simpledb_domain, function(err) {
+// Terrible, terrible hack. Overrides `querystring.escape()` to escape `(` and
+// `)`. This is handled in `aws-lib` 0.0.5 which we are not using atm because
+// it is node 0.4.x only. Remove this hack once we are upgraded.
+// var escape = querystring.escape;
+querystring.escape = _.compose(
+    function(string) {
+        return string.replace(/\(/g,"%28").replace(/\)/g,"%29");
+    },
+    querystring.escape
+);
+
+module.exports = function(options) {
+    if (!(options.domain && options.keyid && options.secret)) {
+        throw new Error('backbone-simpledb requires { domain:[String], keyid:[String], secret:[String] }');
+    }
+    var sdb = dbs[options.domain] = dbs[options.domain] || new simpledb.SimpleDB(options);
+    sdb.createDomain(options.domain, function(err) {
         if (err) throw err;
     });
 
@@ -15,33 +32,58 @@ module.exports = function(settings) {
             return object.url;
         }
     };
+    var unpack = function(data) {
+        return JSON.parse(data.value);
+    };
+    var pack = function(data) {
+        return { value: JSON.stringify(data) };
+    };
 
     return {
+        sdb: sdb,
         sync: function(method, model, success, error) {
             switch (method) {
             case 'read':
-                var data,
-                    base = getUrl(model);
                 if (model.id) {
-                    sdb.getItem(settings.simpledb_domain, base, function(err, data) {
-                        return data ? success(data) : error('Model not found.');
-                    });
+                    sdb.getItem(
+                        options.domain,
+                        getUrl(model),
+                        function(err, data) {
+                            return data ? success(unpack(data)) : error('Model not found.');
+                        }
+                    );
                 } else {
-                    return error('Not supported yet.');
+                    var data = [],
+                        base = getUrl(model);
+                    sdb.select(
+                        'SELECT * FROM ' + options.domain + ' WHERE ItemName() LIKE "' + base + '%"',
+                        function(err, data) {
+                            data = data || [];
+                            success(_(data).map(unpack));
+                        }
+                    );
                 }
                 break;
             case 'create':
             case 'update':
                 sdb.putItem(
-                    settings.simpledb_domain,
+                    options.domain,
                     getUrl(model),
-                    model.toJSON(),
+                    pack(model.toJSON()),
                     function(err) {
                         return err ? error(err) : success({});
                     }
                 );
                 break;
+            case 'delete':
+                sdb.deleteItem(
+                    options.domain,
+                    getUrl(model),
+                    function(err) {
+                        return err ? error(err) : success({});
+                    }
+                );
             }
         }
     }
-}
+};
