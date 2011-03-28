@@ -33,10 +33,20 @@ module.exports = function(options) {
         }
     };
     var unpack = function(data) {
-        return JSON.parse(data.value);
+        for (var key in data) {
+            if (key === '$ItemName') {
+                delete data[key];
+            } else {
+                data[key] = JSON.parse(data[key]);
+            }
+        }
+        return data;
     };
     var pack = function(data) {
-        return { value: JSON.stringify(data) };
+        for (var key in data) {
+            data[key] = JSON.stringify(data[key]);
+        }
+        return data;
     };
 
     return {
