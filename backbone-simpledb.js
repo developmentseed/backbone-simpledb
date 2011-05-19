@@ -3,17 +3,6 @@ var _ = require('underscore')._;
     simpledb = require('simpledb'),
     dbs = {};
 
-// Terrible, terrible hack. Overrides `querystring.escape()` to escape `(` and
-// `)`. This is handled in `aws-lib` 0.0.5 which we are not using atm because
-// it is node 0.4.x only. Remove this hack once we are upgraded.
-// var escape = querystring.escape;
-querystring.escape = _.compose(
-    function(string) {
-        return string.replace(/\(/g,"%28").replace(/\)/g,"%29");
-    },
-    querystring.escape
-);
-
 module.exports = function(options) {
     if (!(options.domain && options.keyid && options.secret)) {
         throw new Error('backbone-simpledb requires { domain:[String], keyid:[String], secret:[String] }');
@@ -83,7 +72,7 @@ module.exports = function(options) {
                         options.domain,
                         getUrl(model),
                         function(err, data) {
-                            return data ? success(unpack(data)) : error('Model not found.');
+                            return data ? success(unpack(data)) : error(new Error('Model not found.'));
                         }
                     );
                 } else {

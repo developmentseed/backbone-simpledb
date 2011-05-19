@@ -1,0 +1,17 @@
+{
+    "name": "backbone-simpledb",
+    "version": "0.1.0",
+    "author": "Young Hahn",
+    "engines": {
+        "node": "0.4.x"
+    },
+    "dependencies": {
+        "underscore": "1.1.x",
+        "simpledb": "0.0.x"
+    },
+    "licenses": [{ "type": "BSD" }],
+    "main": "./backbone-simpledb",
+    "scripts": {
+        "test": "expresso"
+    }
+}
