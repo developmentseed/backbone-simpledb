@@ -2,12 +2,9 @@ Backbone SimpleDB
 -----------------
 Server-side overrides for Backbone to use `simpledb` for Model persistence.
 
-### Compatibility
+### Installation
 
-    joyent node v0.2.6
-    documentcloud backbone 0.3.3
-    rjrodger simpledb 0.0.5
-    mirkok aws-lib v0.0.4
+    npm install backbone-simpledb
 
 ### Usage
 
@@ -26,9 +23,9 @@ an SimpleDB `sdb` instance and a `sync` method that you can use to override
 
 ### Conventions
 
-`backbone-dirty` stores models in the `node-dirty` db using the `model.url` as
-its key. Collections retrieve models by matching the Collection url against
-the initial portion of the Model url.
+`backbone-simpledb` stores models in the db using the `model.url` as its key.
+Collections retrieve models by matching the Collection url against the
+initial portion of the Model url.
 
     var orange = new FruitModel({id: 'orange'});
     var apple = new FruitModel({id: 'apple'});
@@ -43,6 +40,18 @@ the initial portion of the Model url.
     console.log(fruits.url);   // fruits
 
     fruits.fetch();            // retrieves orange, apple, banana
+
+### Limitations
+
+`backbone-simpledb` does not attempt to overcome any of SimpleDB's inherent
+limitations. In particular
+
+- Each model is restricted to 256 attributes
+- Each attribute is restricted to 1024 bytes of data
+
+In addition, model attributes are stored using `JSON.stringify` in order to
+overcome SimpleDB's string-only attribute datatypes. This further reduces the
+available space per attribute for data.
 
 ### Authors
 
