@@ -12,6 +12,6 @@
     "licenses": [{ "type": "BSD" }],
     "main": "./backbone-simpledb",
     "scripts": {
-        "test": "expresso"
+        "test": "./test/run.sh"
     }
 }
