@@ -1,5 +1,6 @@
 {
     "name": "backbone-simpledb",
+    "description": "AWS SimpleDB sync backend for backbone.js.",
     "version": "0.1.0",
     "author": "Young Hahn",
     "engines": {
