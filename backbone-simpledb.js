@@ -86,12 +86,20 @@ module.exports = function(options) {
                 break;
             case 'create':
             case 'update':
-                sdb.putItem(
+                sdb.getItem(
                     options.domain,
                     getUrl(model),
-                    pack(model.toJSON()),
-                    function(err) {
-                        return err ? error(err) : success({});
+                    function(err, data) {
+                        data = (data && unpack(data)) || {};
+                        data = _(data).extend(model.toJSON());
+                        sdb.putItem(
+                            options.domain,
+                            getUrl(model),
+                            pack(data),
+                            function(err) {
+                                return err ? error(err) : success({});
+                            }
+                        );
                     }
                 );
                 break;
